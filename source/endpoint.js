@@ -20,14 +20,14 @@ function optionsForPost(stuff, options) {
   }
 }
 
-let id = (foo) => foo
+function identity(i) { return i }
 
 export default class Endpoint {
   constructor(api, path, {
     method = 'GET',
     params = {},
     headers = {},
-    responseTransform = id,
+    responseTransform = identity,
   } = {}) {
     this.path = path
     this.api = api
@@ -57,6 +57,8 @@ export default class Endpoint {
     }
 
     options = this.method === 'GET' ? optionsForGet(stuff, options) : optionsForPost(stuff, options)
+
+    console.log('options', options)
 
     return options
   }
