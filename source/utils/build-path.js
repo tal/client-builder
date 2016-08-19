@@ -1,7 +1,5 @@
 // @flow
 
-import type { ParamsObject } from '../types'
-
 export default function buildPath(sourcePath: string, paramsIn: ParamsObject): {params: ParamsObject, url: string} {
   let pathParamReg = /(?::(\w+))/g
 

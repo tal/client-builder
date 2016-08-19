@@ -9,6 +9,13 @@ export type ConfigSet = {
   qsParams: string[],
 }
 
+export type OptionalConfigSet = {
+  headers?: ParamsObject,
+  params?: ParamsObject,
+  responseTransform?: ?Function,
+  qsParams?: string[],
+}
+
 export type RequestOptions = {
   url?: string,
   method?: string,

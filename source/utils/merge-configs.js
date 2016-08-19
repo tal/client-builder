@@ -1,7 +1,5 @@
 // @flow
 
-import type { ConfigSet } from '../types'
-
 function identity<T>(i:T): T { return i }
 
 function composeFunctions(func1: ?Function, func2: ?Function): ?Function {

@@ -5,8 +5,6 @@ import buildPath from './utils/build-path'
 import API from './api'
 import mergeConfigs from './utils/merge-configs'
 
-import type { ParamsObject, ConfigSet, RequestOptions } from './types'
-
 type ConfigOptPair = {options: RequestOptions, config: ConfigSet}
 
 function buildURLForPOST(urlTemplate: string): Function {
@@ -16,8 +14,8 @@ function buildURLForPOST(urlTemplate: string): Function {
     let bodyParams: ParamsObject = {}
     let qsParams: ParamsObject = {}
 
-    for (let pName of config.qsParams) {
-      if (pName in params) {
+    for (let pName in params) {
+      if (config.qsParams.indexOf(pName) !== -1) {
         qsParams[pName] = params[pName]
       } else {
         bodyParams[pName] = params[pName]
@@ -36,6 +34,7 @@ function buildURLForPOST(urlTemplate: string): Function {
           ...options.body||{},
           ...bodyParams,
         },
+        json: true,
       },
       config: {
         ...config,
@@ -93,8 +92,8 @@ function applyHeaders({ options, config }: ConfigOptPair): ConfigOptPair {
 }
 
 type EndpointInitializer = {
-  method: string,
-} & ConfigSet
+  method?: string,
+} & OptionalConfigSet
 
 export default class Endpoint {
   api: API
@@ -154,7 +153,9 @@ export default class Endpoint {
     let req: ConfigOptPair = transforms.reduce((pair: ConfigOptPair, trans: Function) => {
       // make a quick copy so object remains pure
       return trans(pair)
-    }, {options: {}, config})
+    }, {options: {
+      method: this.method,
+    }, config})
 
     return req
   }

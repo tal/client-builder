@@ -1,11 +1,9 @@
 // @flow
 import Endpoint from './endpoint'
 
-import type { ConfigSet } from './types'
-
 type APIInitilizer = {
   base: string,
-} & ConfigSet
+} & OptionalConfigSet
 
 export default class API {
   base: string
