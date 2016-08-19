@@ -4,6 +4,8 @@
 source
 
 [libs]
+flow-typed/
+local-types/
 
 [options]
 unsafe.enable_getters_and_setters=true
