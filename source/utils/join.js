@@ -1,4 +1,6 @@
-export default function joinPath(one, two, ...other) {
+/* @flow */
+
+export default function joinPath(one: string, two: string, ...other: string[]): string {
   if (!two) {
     return one
   }

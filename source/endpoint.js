@@ -1,71 +1,168 @@
+// @flow
 import request from './utils/async-request'
 import join from './utils/join'
 import buildPath from './utils/build-path'
-import qs from 'qs'
+import API from './api'
+import mergeConfigs from './utils/merge-configs'
 
-function optionsForGet(stuff, options) {
-  let params = qs.stringify(stuff.params)
+import type { ParamsObject, ConfigSet, RequestOptions } from './types'
 
-  return {
-    ...options,
-    url: stuff.url + '?' + params,
-  }
-}
+type ConfigOptPair = {options: RequestOptions, config: ConfigSet}
 
-function optionsForPost(stuff, options) {
-  return {
-    ...options,
-    url: stuff.url,
-    form: stuff.params,
-  }
-}
+function buildURLForPOST(urlTemplate: string): Function {
+  return ({ options, config }: ConfigOptPair): ConfigOptPair => {
+    const {url, params} = buildPath(urlTemplate, config.params)
 
-function identity(i) { return i }
+    let bodyParams: ParamsObject = {}
+    let qsParams: ParamsObject = {}
 
-export default class Endpoint {
-  constructor(api, path, {
-    method = 'GET',
-    params = {},
-    headers = {},
-    responseTransform = identity,
-  } = {}) {
-    this.path = path
-    this.api = api
-
-    this.headers = headers
-    this.params = params
-    this.method = method
-    this.responseTransform = responseTransform
-  }
-
-  actionOptions({params = {}, headers = {}} = {}) {
-    params = this.api.params({
-      ...this.params,
-      ...params,
-    })
-
-    headers = this.api.headers({
-      ...this.headers,
-      ...headers,
-    })
-
-    let stuff = buildPath(join(this.api.base, this.path), params)
-
-    let options = {
-      headers,
-      method: this.method,
+    for (let pName of config.qsParams) {
+      if (pName in params) {
+        qsParams[pName] = params[pName]
+      } else {
+        bodyParams[pName] = params[pName]
+      }
     }
 
-    options = this.method === 'GET' ? optionsForGet(stuff, options) : optionsForPost(stuff, options)
+    return {
+      options: {
+        ...options,
+        url,
+        qs: {
+          ...options.qs||{},
+          ...qsParams,
+        },
+        body: {
+          ...options.body||{},
+          ...bodyParams,
+        },
+      },
+      config: {
+        ...config,
+        params: qsParams,
+      },
+    }
+  }
+}
 
-    console.log('options', options)
+function buildURLForGET(urlTemplate: string): Function {
+  return ({ options, config }: ConfigOptPair): ConfigOptPair => {
+    const {url, params} = buildPath(urlTemplate, config.params)
 
-    return options
+    return {
+      options: {
+        ...options,
+        url,
+        qs: {
+          ...options.qs||{},
+          ...params,
+        },
+      },
+      config: {
+        ...config,
+        params,
+      },
+    }
+  }
+}
+
+function applyParams({ options, config }: ConfigOptPair): ConfigOptPair {
+  return {
+    options: {
+      ...options,
+      qs: {
+        ...options.qs,
+        ...config.params,
+      },
+    },
+    config,
+  }
+}
+
+function applyHeaders({ options, config }: ConfigOptPair): ConfigOptPair {
+  return {
+    options: {
+      ...options,
+      headers: {
+        ...options.headers,
+        ...config.headers,
+      },
+    },
+    config,
+  }
+}
+
+type EndpointInitializer = {
+  method: string,
+} & ConfigSet
+
+export default class Endpoint {
+  api: API
+  path: string
+  method: string
+
+  config: ConfigSet
+
+  constructor(api: API, path: string, {
+    method = 'GET',
+
+    headers = {},
+    params = {},
+    responseTransform,
+    qsParams = [],
+  }: EndpointInitializer = {}) {
+    if (method === 'GET' && qsParams.length) {
+      console.warn("All query params for GET requests are included in the query string, so no need to pass `qsParams` option.") // eslint-disable-line no-console
+    }
+
+    this.path = path
+    this.api = api
+    this.method = method
+
+    this.config = {
+      headers,
+      params,
+      responseTransform,
+      qsParams,
+    }
   }
 
-  performAction(options = {}) {
-    return request(this.actionOptions(options))
-      .then(this.api.responseTransform)
-      .then(this.responseTransform)
+  get mergedConfig(): ConfigSet {
+    return mergeConfigs(this.api.config, this.config)
+  }
+
+  get fullBaseURI(): string {
+    return join(this.api.base, this.path)
+  }
+
+  actionOptions(params: ParamsObject): ConfigOptPair {
+    const config = mergeConfigs(this.mergedConfig, {
+      params,
+      headers: {},
+      qsParams: [],
+      responseTransform: null,
+    })
+
+    const urlBuilder = this.method === 'GET' ? buildURLForGET : buildURLForPOST
+
+    const transforms: Function[] = [
+      urlBuilder(this.fullBaseURI),
+      applyParams,
+      applyHeaders,
+    ]
+
+    let req: ConfigOptPair = transforms.reduce((pair: ConfigOptPair, trans: Function) => {
+      // make a quick copy so object remains pure
+      return trans(pair)
+    }, {options: {}, config})
+
+    return req
+  }
+
+  performAction(params: ParamsObject) {
+    let {options, config} = this.actionOptions(params)
+
+    return request(options)
+      .then(config.responseTransform)
   }
 }

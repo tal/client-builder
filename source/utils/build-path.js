@@ -1,7 +1,11 @@
-export default function buildPath(sourcePath, params) {
+// @flow
+
+import type { ParamsObject } from '../types'
+
+export default function buildPath(sourcePath: string, paramsIn: ParamsObject): {params: ParamsObject, url: string} {
   let pathParamReg = /(?::(\w+))/g
 
-  params = Object.assign({}, params)
+  let params = Object.assign({}, paramsIn)
 
   let path = sourcePath.replace(pathParamReg, (orig, key) => {
     let val

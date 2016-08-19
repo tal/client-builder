@@ -1,35 +1,35 @@
+// @flow
 import Endpoint from './endpoint'
 
-const id = (res) => res
+import type { ConfigSet } from './types'
+
+type APIInitilizer = {
+  base: string,
+} & ConfigSet
 
 export default class API {
+  base: string
+  config: ConfigSet
+
   constructor({
-    base = null,
+    base,
+
     headers = {},
     params = {},
-    responseTransform = id,
-  } = {}) {
+    responseTransform,
+    qsParams = [],
+  }: APIInitilizer = {}) {
     this.base = base;
-    this._headers = headers
-    this._params = params
-    this.responseTransform = responseTransform
-  }
 
-  params(otherParams) {
-    return {
-      ...this._params,
-      ...otherParams,
+    this.config = {
+      headers,
+      params,
+      responseTransform,
+      qsParams,
     }
   }
 
-  headers(otherHeaders) {
-    return {
-      ...this._headers,
-      ...otherHeaders,
-    }
-  }
-
-  buildEndpoint(...args) {
+  buildEndpoint(...args: Array<any>) {
     return new Endpoint(this, ...args)
   }
 }
