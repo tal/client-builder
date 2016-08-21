@@ -5,6 +5,8 @@ import buildPath from './utils/build-path'
 import API from './api'
 import mergeConfigs from './utils/merge-configs'
 
+import type {RequestOptions, ConfigSet, OptionalConfigSet, ParamsObject} from './types'
+
 type ConfigOptPair = {options: RequestOptions, config: ConfigSet}
 
 function buildURLForPOST(urlTemplate: string): Function {

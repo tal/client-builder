@@ -1,6 +1,8 @@
 // @flow
 import Endpoint from './endpoint'
 
+import type {ConfigSet, OptionalConfigSet} from './types'
+
 type APIInitilizer = {
   base: string,
 } & OptionalConfigSet
