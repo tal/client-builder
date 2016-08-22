@@ -1,5 +1,6 @@
 // flow-typed signature: dc5201ee287a6cf1c84c3d29b0643b66
 // flow-typed version: c13af39626/jasmine_v2.4.x/flow_vx.x.x
+/*eslint-disable */
 
 type JasmineExpectType = {
   not: JasmineExpectType;

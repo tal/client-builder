@@ -19,7 +19,7 @@ export default class API {
     responseTransform,
     qsParams = [],
   }: APIInitilizer = {}) {
-    this.base = base;
+    this.base = base
 
     this.config = {
       headers,
