@@ -44,7 +44,7 @@ The options passed into both `Endpoint` and `API` are merged before the rquest i
 
 Both classes constructors take the options:
 
-```
+```js
 {
   params: {},  // string:string object
   headers: {}, // string:string object
