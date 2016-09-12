@@ -4,7 +4,7 @@
 source
 
 [libs]
-local-types/
+flow-types/
 flow-typed/
 
 [options]

@@ -8,6 +8,7 @@ import mergeConfigs from './utils/merge-configs'
 import type {RequestOptions, ConfigSet, OptionalConfigSet, ParamsObject} from './types'
 
 type ConfigOptPair = {options: RequestOptions, config: ConfigSet}
+type ConfigOptPairTransformer = (pair: ConfigOptPair) => ConfigOptPair
 
 function buildURLForPOST(urlTemplate: string): Function {
   return ({ options, config }: ConfigOptPair): ConfigOptPair => {
@@ -146,13 +147,13 @@ export default class Endpoint {
 
     const urlBuilder = this.method === 'GET' ? buildURLForGET : buildURLForPOST
 
-    const transforms: Function[] = [
+    const transforms: ConfigOptPairTransformer[] = [
       urlBuilder(this.fullBaseURI),
       applyParams,
       applyHeaders,
     ]
 
-    let req: ConfigOptPair = transforms.reduce((pair: ConfigOptPair, trans: Function) => {
+    let req: ConfigOptPair = transforms.reduce((pair: ConfigOptPair, trans: ConfigOptPairTransformer) => {
       // make a quick copy so object remains pure
       return trans(pair)
     }, {options: {
